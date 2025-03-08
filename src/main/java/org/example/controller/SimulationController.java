@@ -1,46 +1,124 @@
 package org.example.controller;
 
-import org.example.model.Intersection;
-import org.example.model.Vehicle;
+import org.example.model.*;
+import org.example.model.enums.Direction;
+import org.example.model.enums.LightState;
 import org.example.parser.JsonCommandParser;
+import org.example.simulation.Simulation;
 
-import java.util.List;
-import java.util.Map;
 import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
 
+/**
+ * Klasa zarządzająca wykonaniem symulacji ruchu drogowego.
+ * Obsługuje ładowanie komend, wykonywanie kroków symulacji, dodawanie pojazdów i zapisywanie wyników.
+ */
 public class SimulationController {
     private final Intersection intersection;
+    private final TrafficLightController trafficLightController;
+    private final List<List<String>> simulationResults;
     private final JsonCommandParser parser;
 
-    public SimulationController() {
-        intersection = new Intersection();
-        parser = new JsonCommandParser();
+    /**
+     * Konstruktor kontrolera symulacji.
+     * Inicjalizuje skrzyżowanie, kontroler świateł drogowych i parser JSON.
+     *
+     * @param simulation Obiekt symulacji, który będzie używany do aktualizacji świateł.
+     */
+    public SimulationController(Simulation simulation) {
+        this.intersection = createDefaultIntersection();
+        this.trafficLightController = new TrafficLightController(intersection, simulation);
+        this.simulationResults = new ArrayList<>();
+        this.parser = new JsonCommandParser();
     }
 
-    // Metoda odpowiedzialna za wykonanie symulacji na podstawie pliku wejściowego i zapis wyniku do pliku wyjściowego
-    public void runSimulation(String inputFile, String outputFile) {
-        try {
-            // Parsowanie poleceń z pliku JSON
-            List<Map<String, Object>> commands = parser.parseInput(inputFile);
-            // Lista statusów dla poszczególnych kroków symulacji
-            List<Map<String, Object>> stepStatuses = new java.util.ArrayList<>();
+    /**
+     * Ładuje komendy symulacji z pliku JSON i wykonuje odpowiednie akcje.
+     *
+     * @param filePath Ścieżka do pliku JSON zawierającego komendy.
+     * @throws IOException Jeśli wystąpi błąd podczas odczytu pliku.
+     */
+    public void runSimulation(String filePath) throws IOException {
+        List<Map<String, Object>> commands = parser.parseInput(filePath);
 
-            for(Map<String, Object> command : commands){
-                String type = (String) command.get("type");
-                if("addVehicle".equals(type)) {
-                    String vehicleId = (String) command.get("vehicleId");
-                    String startRoad = (String) command.get("startRoad");
-                    String endRoad = (String) command.get("endRoad");
-                    intersection.addVehicle(new Vehicle(vehicleId, startRoad, endRoad));
-                } else if("step".equals(type)) {
-                    List<String> leftVehicles = intersection.processStep();
-                    stepStatuses.add(Map.of("leftVehicles", leftVehicles));
-                }
+        for (Map<String, Object> command : commands) {
+            String commandType = (String) command.get("type");
+
+            switch (commandType) {
+                case "addVehicle":
+                    handleAddVehicle(command);
+                    break;
+                case "step":
+                    processStep();
+                    break;
+                default:
+                    System.out.println("Nieznana komenda: " + commandType);
             }
-            // Zapis wyniku symulacji do pliku JSON
-            parser.writeOutput(outputFile, stepStatuses);
-        } catch(IOException e) {
-            e.printStackTrace();
         }
+    }
+
+    /**
+     * Wykonuje jeden krok symulacji.
+     * Zaktualizowane zostają światła drogowe oraz stan pojazdów.
+     */
+    private void processStep() {
+        trafficLightController.updateTrafficLights();
+
+        List<String> vehiclesThatPassed = new ArrayList<>();
+        for (Road road : intersection.getAllRoads().values()) {
+            if (road.getTrafficLight().isGreen() && road.hasVehicles()) {
+                vehiclesThatPassed.add(road.removeVehicle().getVehicleId());
+            }
+        }
+        simulationResults.add(vehiclesThatPassed);
+    }
+
+    /**
+     * Dodaje pojazd do odpowiedniej drogi na podstawie danych z komendy.
+     *
+     * @param command Komenda zawierająca dane pojazdu.
+     */
+    private void handleAddVehicle(Map<String, Object> command) {
+        String vehicleId = (String) command.get("vehicleId");
+        Direction startRoad = Direction.valueOf(((String) command.get("startRoad")).toUpperCase());
+        Direction endRoad = Direction.valueOf(((String) command.get("endRoad")).toUpperCase());
+
+        Vehicle vehicle = new Vehicle(vehicleId, startRoad, endRoad);
+
+        Road road = intersection.getRoad(startRoad);
+        if (road != null) {
+            road.addVehicle(vehicle);
+        } else {
+            System.out.println("Nieznana droga: " + startRoad);
+        }
+    }
+
+    /**
+     * Zapisuje wyniki symulacji do pliku JSON.
+     *
+     * @param outputFilePath Ścieżka do pliku wyjściowego.
+     * @throws IOException Jeśli wystąpi błąd podczas zapisu pliku.
+     */
+    public void saveResults(String outputFilePath) throws IOException {
+        List<Map<String, List<String>>> stepStatuses = simulationResults.stream()
+                .map(vehicles -> Collections.singletonMap("vehiclesLeft", vehicles))
+                .collect(Collectors.toList());
+
+        parser.writeOutput(outputFilePath, stepStatuses);
+    }
+
+    /**
+     * Tworzy domyślne skrzyżowanie z czterema drogami i sygnalizacją świetlną.
+     *
+     * @return Skrzyżowanie z domyślnymi drogami i światłami.
+     */
+    private Intersection createDefaultIntersection() {
+        Map<Direction, Road> roads = Arrays.stream(Direction.values())
+                .collect(Collectors.toMap(
+                        direction -> direction,
+                        direction -> new Road(direction, new TrafficLight(LightState.RED))
+                ));
+        return new Intersection(roads);
     }
 }
