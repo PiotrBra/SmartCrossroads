@@ -22,7 +22,7 @@ public class JsonCommandParser {
     }
 
     // Metoda zapisująca wynik symulacji w formacie JSON
-    public void writeOutput(String outputFile, List<Map<String, Object>> stepStatuses) throws IOException {
+    public void writeOutput(String outputFile, List<Map<String, List<String>>> stepStatuses) throws IOException {
         Map<String, Object> outputMap = new HashMap<>();
         outputMap.put("stepStatuses", stepStatuses);
         mapper.writerWithDefaultPrettyPrinter().writeValue(new File(outputFile), outputMap);
