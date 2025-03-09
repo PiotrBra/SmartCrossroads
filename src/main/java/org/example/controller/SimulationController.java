@@ -126,7 +126,4 @@ public class SimulationController {
         return new Intersection(roads);
     }
 
-    public Intersection getIntersection() {
-        return this.intersection;
-    }
 }

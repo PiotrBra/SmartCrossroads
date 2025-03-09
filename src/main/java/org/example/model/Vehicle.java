@@ -35,12 +35,4 @@ public class Vehicle {
         return vehicleId;
     }
 
-    public Direction getStartRoad() {
-        return startRoad;
-    }
-
-    public Direction getEndRoad() {
-        return endRoad;
-    }
-
 }

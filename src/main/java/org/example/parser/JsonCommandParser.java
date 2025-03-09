@@ -1,6 +1,5 @@
 package org.example.parser;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.*;
@@ -13,7 +12,7 @@ public class JsonCommandParser {
         mapper = new ObjectMapper();
     }
 
-    // Metoda parsująca dane wejściowe – oczekujemy obiektu JSON z kluczem "commands"
+    // Metoda parsująca dane wejściowe
     public List<Map<String, Object>> parseInput(String inputFile) throws IOException {
         Map<String, List<Map<String, Object>>> jsonMap =
                 mapper.readValue(new File(inputFile),
@@ -21,7 +20,7 @@ public class JsonCommandParser {
         return jsonMap.get("commands");
     }
 
-    // Metoda zapisująca wynik symulacji w formacie JSON
+    // Metoda zapisująca wynik symulacji
     public void writeOutput(String outputFile, List<Map<String, List<String>>> stepStatuses) throws IOException {
         Map<String, Object> outputMap = new HashMap<>();
         outputMap.put("stepStatuses", stepStatuses);
