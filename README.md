@@ -1,61 +1,83 @@
-# Algorytm zarządzania światłami drogowymi na skrzyżowaniu
+# Symulacja Inteligentnych Świateł Drogowych
 
-Algorytm opisuje sposób zarządzania sygnalizacją świetlną na skrzyżowaniu, aby zoptymalizować przepływ ruchu na podstawie liczby oczekujących pojazdów. Jego celem jest dynamiczne dostosowywanie czasów trwania zielonych świateł, aby jak najlepiej reagować na zmieniające się warunki na skrzyżowaniu.
+Projekt **Symulacja Inteligentnych Świateł Drogowych** to system, który dynamicznie zarządza sygnalizacją świetlną na skrzyżowaniu, reagując na natężenie ruchu i liczbę pojazdów oczekujących na przejazd. Rozwiązanie zostało zaprojektowane i zaimplementowane w języku Java, przy wykorzystaniu nowoczesnych technologii oraz podejścia zorientowanego na testy i rozszerzalność systemu.
 
-## Główna idea algorytmu
+## Spis Treści
 
-1. **Zielone światło zmienia się w zależności od liczby pojazdów:** Algorytm przydziela zielone światło w tym kierunku, w którym pojazdy oczekują najdłużej (lub tam, gdzie jest ich najwięcej).
-2. **Maksymalny czas zielonego światła:** Światło w danym kierunku nie może pozostawać zielone dłużej niż określony czas (5 kroków), nawet jeśli nadal są pojazdy.
-3. **Zmiana świateł na czerwone:** Gdy minie czas zielonego światła lub nie ma już oczekujących pojazdów, światła zmieniają się na czerwone, a algorytm wybiera nowy kierunek dla zielonego światła.
+- [Opis projektu](#opis-projektu)
+- [Algorytm zarządzania światłami](#algorytm-zarządzania-światłami)
+- [Wymagania](#wymagania)
+- [Instalacja i Uruchomienie](#instalacja-i-uruchomienie)
+- [Testy](#testy)
+- [Przykłady Wejścia/Wyjścia](#przykłady-wejściawyjścia)
+- [Dodatkowe Funkcjonalności](#dodatkowe-funkcjonalności)
+- [Proces Rekrutacyjny](#proces-rekrutacyjny)
+- [Autorzy](#autorzy)
+- [Licencja](#licencja)
 
-## Szczegółowy opis działania
+## Opis projektu
 
-### 1. **Sprawdzanie obecnego stanu świateł**
+Celem projektu jest stworzenie symulacji inteligentnych świateł drogowych na skrzyżowaniu, które posiada cztery drogi dojazdowe (północ, południe, wschód, zachód). System zarządza cyklem świateł oraz umożliwia wykonanie symulacji na podstawie listy komend zapisanych w formacie JSON. Każda komenda definiuje akcję wykonywaną na skrzyżowaniu.
 
-Algorytm rozpoczyna cykl od sprawdzenia, czy światło w danym kierunku (`currentGreenDirection`) jest aktywne, a liczba upływających kroków (`stepsElapsed`) nie przekroczyła maksymalnego limitu (5 kroków). Jeśli warunki są spełnione, to:
+## Algorytm zarządzania światłami
 
-- **Zielone światło zostaje na dłużej:** Jeśli w kierunku zielonego światła lub w jego przeciwnym kierunku znajdują się pojazdy oczekujące, algorytm zwiększa licznik kroków (`stepsElapsed`) o 1. Światło pozostaje zielone, aby dać pojazdom szansę na przejazd.
+Algorytm opiera się na dynamicznym przydzielaniu zielonego światła do par dróg, które są najbardziej obciążone. Poniżej przedstawiono główne założenia algorytmu:
 
-### 2. **Zakończenie trwania zielonego światła**
+1. **Zielone światło zmienia się w zależności od liczby pojazdów:**  
+   Zielone światło przydzielane jest do drogi, na której pojazdy oczekują najdłużej lub jest ich najwięcej.
 
-Jeśli liczba kroków przekroczyła maksymalny czas trwania zielonego światła (5 kroków) lub jeśli nie ma już pojazdów oczekujących, światło zmienia się na czerwone. Zostaje wtedy zresetowany licznik kroków.
+2. **Maksymalny czas zielonego światła:**  
+   Światło w danym kierunku nie może pozostać zielone dłużej niż określony czas. Nawet jeśli pojazdy nadal czekają, po upływie tego czasu następuje zmiana.
 
-### 3. **Zmiana świateł na czerwone**
+3. **Zmiana świateł na czerwone:**  
+   Gdy minie czas zielonego światła lub nie ma już oczekujących pojazdów, wszystkie światła zmieniają się na czerwone. Następnie algorytm wybiera nową parę dróg (np. północ-południe lub wschód-zachód) na podstawie największej liczby oczekujących pojazdów.
 
-Przed przejściem do zmiany kierunku zielonego światła, algorytm ustawia wszystkie światła na czerwone. Zapobiega to sytuacji, w której więcej niż jedno światło mogłoby świecić na zielono w tym samym czasie.
+4. **Wybór najbardziej obleganego kierunku:**  
+   Algorytm sumuje liczbę pojazdów oczekujących na drodze i jej przeciwnym kierunku. Para o największej sumie otrzymuje zielone światło, co zapewnia optymalny przepływ ruchu.
 
-### 4. **Wybór najzajętszego kierunku**
+5. **Brak pojazdów – światła czerwone:**  
+   Jeśli na żadnej drodze nie ma oczekujących pojazdów, wszystkie światła pozostają czerwone.
 
-Algorytm analizuje, które kierunki są najbardziej obciążone, czyli w których drogach znajduje się najwięcej oczekujących pojazdów. Do tego celu wykorzystywana jest funkcja, która sumuje liczbę oczekujących pojazdów w danym kierunku oraz w przeciwnym kierunku (pary kierunków: północ-południe, wschód-zachód).
+6. **Przydzielanie zielonego światła i oczekiwanie:**  
+   Po przydzieleniu zielonego światła, algorytm sprawdza czy w danym kierunku pojazdy nadal oczekują. Jeśli tak, licznik kroków jest zwiększany, a w przeciwnym przypadku następuje reset i wybór nowej pary dróg.
 
-Jeśli liczba oczekujących pojazdów w danej parze drogowej jest największa, to kierunki te będą miały zielone światło. Tylko te pary kierunków są brane pod uwagę, ponieważ skrzyżowanie obsługuje ruch na drogach w parach (np. północ-południe).
+### Metody pomocnicze
 
-### 5. **Brak pojazdów – światła czerwone**
+- **`findBusiestRoadPair(Map<Direction, Road> roads)`** – Znajduje parę dróg (np. północ-południe lub wschód-zachód) z największą liczbą oczekujących pojazdów.
+- **`countWaitingVehicles(Map<Direction, Road> roads, Direction direction)`** – Sumuje pojazdy oczekujące na drodze i jej przeciwnej.
+- **`areAllRoadsEmpty(Map<Direction, Road> roads, Direction direction)`** – Sprawdza, czy w danej parze dróg nie ma żadnych oczekujących pojazdów.
+- **`getOppositeDirection(Direction direction)`** – Zwraca przeciwny kierunek (np. dla NORTH – SOUTH).
 
-Jeśli żadna z dróg nie ma pojazdów oczekujących (np. wszystkie pojazdy opuściły skrzyżowanie), algorytm utrzymuje wszystkie światła na czerwonym. Algorytm nie przydziela zielonego światła, jeśli nie ma potrzeby przejazdu.
 
-### 6. **Przydzielanie zielonego światła najzajętszym kierunkom**
+## Wymagania
 
-Jeśli pojazdy nadal oczekują na skrzyżowaniu, algorytm wybiera kierunki z największą liczbą oczekujących pojazdów i ustawia w tych kierunkach światło na zielone. Zmienna `currentGreenDirection` zostaje zaktualizowana, aby wskazać aktualny kierunek z zielonym światłem.
+- **Java:** Wersja 11 lub nowsza.
+- **Gradle:** Narzędzie do budowania projektu.
+- **Biblioteki:**
+    - JUnit 5 – testy jednostkowe oraz integracyjne.
+    - Mockito – do mockowania zależności.
+    - JSONAssert – porównywanie wyników JSON.
+- **Format danych JSON:**  
+  Wejściowy plik JSON zawiera listę komend:
+    - **Komenda `addVehicle`:** Dodaje pojazd na określonej drodze.
+    - **Komenda `step`:** Wykonuje krok symulacji, przepuszczając pojazdy przez skrzyżowanie.
 
-### 7. **Oczekiwanie na zmianę**
+  Oczekiwanym wyjściem jest JSON zawierający listę statusów kroków symulacji, gdzie dla każdego kroku podana jest lista pojazdów, które opuściły skrzyżowanie.
 
-Po przydzieleniu zielonego światła algorytm wraca do punktu wyjścia, gdzie ponownie sprawdza, czy w danym kierunku są pojazdy. Jeśli tak, licznik kroków zostaje zwiększony. Jeśli nie, algorytm ponownie zmienia światła na czerwone i wybiera nowe kierunki.
+## Instalacja i Uruchomienie
 
-## Metody pomocnicze
+1. **Klonowanie repozytorium:**
 
-### `findBusiestRoadPair(Map<Direction, Road> roads)`
-Funkcja ta służy do znalezienia pary kierunków, które mają największą liczbę pojazdów oczekujących. Sumuje liczbę pojazdów na drodze w danym kierunku oraz na drodze w przeciwnym kierunku.
-
-### `countWaitingVehicles(Map<Direction, Road> roads, Direction direction)`
-Zlicza liczbę pojazdów oczekujących na drodze w określonym kierunku oraz w jego przeciwnym kierunku.
-
-### `areAllRoadsEmpty(Map<Direction, Road> roads, Direction direction)`
-Sprawdza, czy w danym kierunku oraz w przeciwnym nie ma żadnych pojazdów oczekujących. Jeśli żadna droga nie ma pojazdów, wszystkie światła zostają czerwone.
-
-### `getOppositeDirection(Direction direction)`
-Zwraca przeciwny kierunek do podanego, np. dla `NORTH` zwraca `SOUTH`.
-
-## Podsumowanie
-
-Algorytm zmienia sygnalizację świetlną na skrzyżowaniu na podstawie liczby oczekujących pojazdów. Jego głównym celem jest utrzymanie płynności ruchu poprzez dynamiczną zmianę świateł, zapewniając, że kierunki z większym natężeniem ruchu będą miały dłuższe okresy zielonego światła. Zmiana świateł na czerwone następuje, gdy nie ma już pojazdów, a algorytm zawsze dąży do tego, aby unikać sytuacji, w których niepotrzebnie świeci się zielone światło, gdy nie ma oczekujących pojazdów.
+   ```bash
+   git clone https://github.com/PiotrBra/SmartCrossroads.git
+   cd SmartCrossroads
+    ```
+2. **Budowanie projektu**
+   ```bash
+      .\gradlew clean build
+    ```
+3. **Uruchomienie projektu**
+    ```bash
+       java -jar build/libs/SmartCrossroads-1.0.jar input.json output.json      
+    ``` 
+   ***Uwaga! Powyższy przykład uruchomienia może nie działać na systemach operacyjnych innych niż Windows***
