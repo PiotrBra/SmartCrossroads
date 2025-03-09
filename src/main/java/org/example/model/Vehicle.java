@@ -8,6 +8,8 @@ import org.example.model.enums.Direction;
  */
 public class Vehicle {
     private final String vehicleId;
+
+
     private final Direction startRoad;
     private final Direction endRoad;
 
@@ -32,4 +34,13 @@ public class Vehicle {
     public String getVehicleId() {
         return vehicleId;
     }
+
+    public Direction getStartRoad() {
+        return startRoad;
+    }
+
+    public Direction getEndRoad() {
+        return endRoad;
+    }
+
 }

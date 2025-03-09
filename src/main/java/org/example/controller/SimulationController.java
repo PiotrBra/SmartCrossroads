@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class SimulationController {
     private final Intersection intersection;
     private final TrafficLightController trafficLightController;
-    private final List<List<String>> simulationResults;
+    public final List<List<String>> simulationResults;
     private final JsonCommandParser parser;
 
     /**
@@ -34,12 +34,12 @@ public class SimulationController {
     }
 
     /**
-     * Ładuje komendy symulacji z pliku JSON i wykonuje odpowiednie akcje.
+     * Laduje komendy symulacji z pliku JSON i wykonuje odpowiednie akcje.
      *
      * @param filePath Ścieżka do pliku JSON zawierającego komendy.
      * @throws IOException Jeśli wystąpi błąd podczas odczytu pliku.
      */
-    public void runSimulation(String filePath) throws IOException {
+    public void runSimulation(String filePath) throws IOException, InterruptedException {
         List<Map<String, Object>> commands = parser.parseInput(filePath);
 
         for (Map<String, Object> command : commands) {
@@ -62,15 +62,19 @@ public class SimulationController {
      * Wykonuje jeden krok symulacji.
      * Zaktualizowane zostają światła drogowe oraz stan pojazdów.
      */
-    private void processStep() {
+    public void processStep() throws InterruptedException {
         trafficLightController.updateTrafficLights();
 
         List<String> vehiclesThatPassed = new ArrayList<>();
         for (Road road : intersection.getAllRoads().values()) {
             if (road.getTrafficLight().isGreen() && road.hasVehicles()) {
+                System.out.println("Na drodze " + road.getDirection() +" jest " + road.getTrafficLight().getState() + " swiatlo");
                 vehiclesThatPassed.add(road.removeVehicle().getVehicleId());
             }
         }
+        System.out.println("pojazdy, ktore przejechaly to: " + vehiclesThatPassed);
+        System.out.println("Czekam na kolejne komendy");
+        Thread.sleep(3000);
         simulationResults.add(vehiclesThatPassed);
     }
 
@@ -79,7 +83,7 @@ public class SimulationController {
      *
      * @param command Komenda zawierająca dane pojazdu.
      */
-    private void handleAddVehicle(Map<String, Object> command) {
+    void handleAddVehicle(Map<String, Object> command) {
         String vehicleId = (String) command.get("vehicleId");
         Direction startRoad = Direction.valueOf(((String) command.get("startRoad")).toUpperCase());
         Direction endRoad = Direction.valueOf(((String) command.get("endRoad")).toUpperCase());
@@ -120,5 +124,9 @@ public class SimulationController {
                         direction -> new Road(direction, new TrafficLight(LightState.RED))
                 ));
         return new Intersection(roads);
+    }
+
+    public Intersection getIntersection() {
+        return this.intersection;
     }
 }
