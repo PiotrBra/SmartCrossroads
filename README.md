@@ -10,14 +10,16 @@ Projekt **Symulacja Inteligentnych Świateł Drogowych** to system, który dynam
 - [Instalacja i Uruchomienie](#instalacja-i-uruchomienie)
 - [Testy](#testy)
 - [Przykłady Wejścia/Wyjścia](#przykłady-wejściawyjścia)
-- [Dodatkowe Funkcjonalności](#dodatkowe-funkcjonalności)
-- [Proces Rekrutacyjny](#proces-rekrutacyjny)
-- [Autorzy](#autorzy)
-- [Licencja](#licencja)
+- [Podsumowanie](#podsumowanie)
+
+
 
 ## Opis projektu
 
-Celem projektu jest stworzenie symulacji inteligentnych świateł drogowych na skrzyżowaniu, które posiada cztery drogi dojazdowe (północ, południe, wschód, zachód). System zarządza cyklem świateł oraz umożliwia wykonanie symulacji na podstawie listy komend zapisanych w formacie JSON. Każda komenda definiuje akcję wykonywaną na skrzyżowaniu.
+Celem projektu jest stworzenie symulacji inteligentnych świateł drogowych na skrzyżowaniu,
+które posiada cztery drogi dojazdowe (północ, południe, wschód, zachód). 
+System zarządza cyklem świateł oraz umożliwia wykonanie symulacji na podstawie listy komend zapisanych w formacie JSON.
+Każda komenda definiuje akcję wykonywaną na skrzyżowaniu.
 
 ## Algorytm zarządzania światłami
 
@@ -81,3 +83,117 @@ Algorytm opiera się na dynamicznym przydzielaniu zielonego światła do par dr�
        java -jar build/libs/SmartCrossroads-1.0.jar input.json output.json      
     ``` 
    ***Uwaga! Powyższy przykład uruchomienia może nie działać na systemach operacyjnych innych niż Windows***
+## Testy
+Aplikacja jest pokryta zarówno testami jednostkowymi jak i integracyjnymi.
+
+## Przykłady wejścia/wyjścia
+***input.json***
+```json
+{
+
+  "commands": [
+
+    {
+
+      "type": "addVehicle",
+
+      "vehicleId": "vehicle1",
+
+      "startRoad": "south",
+
+      "endRoad": "north"
+
+    },
+
+    {
+
+      "type": "addVehicle",
+
+      "vehicleId": "vehicle2",
+
+      "startRoad": "north",
+
+      "endRoad": "south"
+
+    },
+
+    {
+
+      "type": "step"
+
+    },
+
+    {
+
+      "type": "step"
+
+    },
+
+    {
+
+      "type": "addVehicle",
+
+      "vehicleId": "vehicle3",
+
+      "startRoad": "west",
+
+      "endRoad": "south"
+
+    },
+
+    {
+
+      "type": "addVehicle",
+
+      "vehicleId": "vehicle4",
+
+      "startRoad": "west",
+
+      "endRoad": "south"
+
+    },
+
+    {
+
+      "type": "step"
+
+    },
+
+    {
+
+      "type": "step"
+
+    }
+
+  ]
+
+}
+```
+***output.json***
+```json
+{
+  "stepStatuses" : [ {
+    "vehiclesLeft" : [ "vehicle2", "vehicle1" ]
+  }, {
+    "vehiclesLeft" : [ ]
+  }, {
+    "vehiclesLeft" : [ "vehicle3" ]
+  }, {
+    "vehiclesLeft" : [ "vehicle4" ]
+  } ]
+}
+```
+## Podsumowanie
+Symulacja systemu zarządzania sygnalizacją świetlną na skrzyżowaniach, opracowana w języku Java
+to systemm który dynamicznie analizuje natężenie ruchu oraz liczbę pojazdów oczekujących,
+optymalizując przepływ samochodów w oparciu o inteligentny algorytm wyboru priorytetowych kierunków.
+
+***Kluczowe funkcjonalności:***
+- Dynamiczne przydzielanie zielonego światła dla najbardziej obciążonych dróg.
+- Maksymalny czas świecenia zielonego światła dla zapewnienia płynności ruchu.
+- Automatyczna zmiana świateł na czerwone w przypadku braku pojazdów.
+-  Obsługa komend w formacie JSON do symulacji ruchu.
+- Testy jednostkowe i integracyjne zapewniające niezawodność systemu.
+
+
+
